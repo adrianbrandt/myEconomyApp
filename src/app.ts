@@ -7,6 +7,7 @@ import { PrismaClient } from '@prisma/client';
 import transactionRoutes from './routes/transaction.routes';
 import { errorMiddleware } from './middleware/error.middleware';
 import logger from './utils/logger';
+import dashboardRoutes from "./routes/dashboard.routes";
 
 // Load environment variables
 dotenv.config();
@@ -24,11 +25,13 @@ app.use(cors({
   origin: 'http://localhost:5173', // This is the default Vite frontend port
   credentials: true
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/api/transactions', transactionRoutes);
+app.use('/transactions', transactionRoutes);
+app.use('/dashboard',dashboardRoutes);
 
 // Health check
 app.get('/health', (req: Request, res: Response) => {

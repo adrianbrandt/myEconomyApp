@@ -1,54 +1,69 @@
+// src/pages/AddTransaction.tsx
 import React, { useState } from 'react';
-import axios from 'axios';
+import { useAddTransaction } from '../hooks/useTransactions';
 
 const AddTransaction: React.FC = () => {
-    const [description, setDescription] = useState('');
+    const addTransactionMutation = useAddTransaction();
+
+    const [title, setTitle] = useState('');
     const [amount, setAmount] = useState('');
-    const [type, setType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE');
-    const [date, setDate] = useState('');
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState(false);
+    const [categoryCode, setCategoryCode] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState('CARD');
+    const [debtorAccount, setDebtorAccount] = useState('');
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setError(null);
-        setSuccess(false);
 
-        try {
-            await axios.post('http://localhost:3000/api/transactions', {
-                description,
-                amount: parseFloat(amount),
-                type,
-                date: new Date(date).toISOString()
-            });
+        const newTransaction = {
+            title,
+            amount: parseFloat(amount),
+            categoryCode,
+            paymentMethod,
+            debtorAccount,
+            currencyCode: 'EUR',
+            paymentStatus: 'BOOKED'
+        };
 
-            // Reset form
-            setDescription('');
-            setAmount('');
-            setType('EXPENSE');
-            setDate('');
-            setSuccess(true);
-        } catch (err) {
-            setError('Failed to add transaction');
-        }
+        addTransactionMutation.mutate(newTransaction, {
+            onSuccess: () => {
+                // Reset form
+                setTitle('');
+                setAmount('');
+                setCategoryCode('');
+                setPaymentMethod('CARD');
+                setDebtorAccount('');
+            }
+        });
     };
 
     return (
         <div className="add-transaction">
             <h2>Add New Transaction</h2>
-            {error && <div style={{ color: 'red' }}>{error}</div>}
-            {success && <div style={{ color: 'green' }}>Transaction added successfully!</div>}
+
+            {addTransactionMutation.isError && (
+                <div className="error-message">
+                    Failed to add transaction: {addTransactionMutation.error.message}
+                </div>
+            )}
+
+            {addTransactionMutation.isSuccess && (
+                <div className="success-message">
+                    Transaction added successfully!
+                </div>
+            )}
+
             <form onSubmit={handleSubmit}>
                 <div>
-                    <label htmlFor="description">Description:</label>
+                    <label htmlFor="title">Title:</label>
                     <input
                         type="text"
-                        id="description"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
+                        id="title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
                         required
                     />
                 </div>
+
                 <div>
                     <label htmlFor="amount">Amount:</label>
                     <input
@@ -60,29 +75,55 @@ const AddTransaction: React.FC = () => {
                         required
                     />
                 </div>
+
                 <div>
-                    <label htmlFor="type">Type:</label>
+                    <label htmlFor="categoryCode">Category:</label>
                     <select
-                        id="type"
-                        value={type}
-                        onChange={(e) => setType(e.target.value as 'INCOME' | 'EXPENSE')}
+                        id="categoryCode"
+                        value={categoryCode}
+                        onChange={(e) => setCategoryCode(e.target.value)}
                         required
                     >
-                        <option value="EXPENSE">Expense</option>
-                        <option value="INCOME">Income</option>
+                        <option value="">Select Category</option>
+                        <option value="GROCERIES">Groceries</option>
+                        <option value="TRANSPORTATION">Transportation</option>
+                        <option value="UTILITIES">Utilities</option>
+                        <option value="ENTERTAINMENT">Entertainment</option>
+                        <option value="OTHER">Other</option>
                     </select>
                 </div>
+
                 <div>
-                    <label htmlFor="date">Date:</label>
+                    <label htmlFor="paymentMethod">Payment Method:</label>
+                    <select
+                        id="paymentMethod"
+                        value={paymentMethod}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        required
+                    >
+                        <option value="CARD">Card</option>
+                        <option value="CASH">Cash</option>
+                        <option value="BANK_TRANSFER">Bank Transfer</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label htmlFor="debtorAccount">Account:</label>
                     <input
-                        type="date"
-                        id="date"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
+                        type="text"
+                        id="debtorAccount"
+                        value={debtorAccount}
+                        onChange={(e) => setDebtorAccount(e.target.value)}
                         required
                     />
                 </div>
-                <button type="submit">Add Transaction</button>
+
+                <button
+                    type="submit"
+                    disabled={addTransactionMutation.isPending}
+                >
+                    {addTransactionMutation.isPending ? 'Adding...' : 'Add Transaction'}
+                </button>
             </form>
         </div>
     );

@@ -1,60 +1,57 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
-interface Transaction {
-    id: number;
-    amount: number;
-    description: string;
-    date: string;
-    type: 'INCOME' | 'EXPENSE';
-}
+// src/pages/TransactionList.tsx
+import React, { useState } from 'react';
+import { useTransactions } from '../hooks/useTransactions';
 
 const TransactionList: React.FC = () => {
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
+    const { data, isLoading, error } = useTransactions(page);
 
-    useEffect(() => {
-        const fetchTransactions = async () => {
-            try {
-                const response = await axios.get('http://localhost:3000/api/transactions');
-                setTransactions(response.data);
-                setIsLoading(false);
-            } catch (err) {
-                setError('Failed to fetch transactions');
-                setIsLoading(false);
-            }
-        };
-
-        fetchTransactions();
-    }, []);
-
-    if (isLoading) return <div>Loading...</div>;
-    if (error) return <div>{error}</div>;
+    if (isLoading) return <div className="loading">Loading Transactions...</div>;
+    if (error) return <div className="error-message">Failed to load transactions</div>;
+    if (!data || data.data.length === 0) return <div>No transactions found</div>;
 
     return (
         <div className="transaction-list">
             <h2>Transactions</h2>
+
             <table>
                 <thead>
                 <tr>
                     <th>Date</th>
-                    <th>Description</th>
+                    <th>Title</th>
                     <th>Amount</th>
-                    <th>Type</th>
+                    <th>Category</th>
+                    <th>Payment Method</th>
                 </tr>
                 </thead>
                 <tbody>
-                {transactions.map((transaction) => (
+                {data.data.map((transaction) => (
                     <tr key={transaction.id}>
-                        <td>{new Date(transaction.date).toLocaleDateString()}</td>
-                        <td>{transaction.description}</td>
-                        <td>{transaction.amount}</td>
-                        <td>{transaction.type}</td>
+                        <td>{new Date(transaction.bookingDate).toLocaleDateString()}</td>
+                        <td>{transaction.title}</td>
+                        <td>€{transaction.amount.toFixed(2)}</td>
+                        <td>{transaction.categoryCode}</td>
+                        <td>{transaction.paymentMethod}</td>
                     </tr>
                 ))}
                 </tbody>
             </table>
+
+            <div className="pagination">
+                <button
+                    onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                    disabled={page === 1}
+                >
+                    Previous
+                </button>
+                <span>Page {page} of {Math.ceil(data.count / data.limit)}</span>
+                <button
+                    onClick={() => setPage(prev => prev + 1)}
+                    disabled={page >= Math.ceil(data.count / data.limit)}
+                >
+                    Next
+                </button>
+            </div>
         </div>
     );
 };

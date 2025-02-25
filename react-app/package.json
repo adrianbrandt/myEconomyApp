@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.66.9",
+    "@tanstack/react-query-devtools": "^5.66.9",
     "@vitejs/plugin-react-swc": "^3.8.0",
     "axios": "^1.7.9",
     "react": "^19.0.0",
