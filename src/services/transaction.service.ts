@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { TransactionDTO, TransactionQueryParams } from '../types/transaction.types';
 import { HttpException } from '../middleware/error.middleware';
+import logger from '../utils/logger';
 
 class TransactionService {
   private prisma: PrismaClient;
@@ -12,21 +13,41 @@ class TransactionService {
 
   async create(data: TransactionDTO) {
     try {
-      const { categoryCode, ...otherData } = data;
+      logger.info(`Attempting to create transaction: ${JSON.stringify(data)}`);
 
-      return await this.prisma.transaction.create({
-        data: {
-          ...otherData,
-          categoryCode, // Make sure this matches your schema
-          id: uuidv4()
-        },
+      // Create a transaction object with all required fields from the schema
+      const transactionData = {
+        id: uuidv4(), // Generate a UUIDv4 for the transaction
+        title: data.title,
+        amount: data.amount,
+        currencyCode: data.currencyCode || "EUR", // Default value from schema
+        debtorAccount: data.debtorAccount,
+        creditorAccount: data.creditorAccount,
+        categoryCode: data.categoryCode,
+        bookingDate: data.bookingDate || new Date(), // Default to now if not provided
+        valueDate: data.valueDate || new Date(), // Default to now if not provided
+        remittanceInformation: data.remittanceInformation,
+        paymentMethod: data.paymentMethod,
+        paymentStatus: data.paymentStatus || "BOOKED" // Default value from schema
+      };
+
+      logger.info(`Prepared transaction data: ${JSON.stringify(transactionData)}`);
+
+      const result = await this.prisma.transaction.create({
+        data: transactionData,
       });
+
+      logger.info(`Transaction created successfully with ID: ${result.id}`);
+      return result;
     } catch (error) {
+      logger.error(`Error creating transaction: ${error}`);
+      if (error instanceof Error) {
+        logger.error(`Stack trace: ${error.stack}`);
+      }
       throw error;
     }
   }
 
-  // In the findAll method of your transaction.service.ts
   async findAll(query: TransactionQueryParams) {
     try {
       const page = Number(query.page) || 1;
@@ -99,6 +120,7 @@ class TransactionService {
         limit,
       };
     } catch (error) {
+      logger.error(`Error finding transactions: ${error}`);
       throw error;
     }
   }
@@ -115,6 +137,7 @@ class TransactionService {
 
       return transaction;
     } catch (error) {
+      logger.error(`Error finding transaction by ID: ${error}`);
       throw error;
     }
   }
@@ -129,6 +152,7 @@ class TransactionService {
         data,
       });
     } catch (error) {
+      logger.error(`Error updating transaction: ${error}`);
       throw error;
     }
   }
@@ -142,6 +166,7 @@ class TransactionService {
         where: { id },
       });
     } catch (error) {
+      logger.error(`Error deleting transaction: ${error}`);
       throw error;
     }
   }

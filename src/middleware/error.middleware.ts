@@ -20,7 +20,16 @@ export const errorMiddleware = (
     next: NextFunction
 ) => {
   try {
-    logger.error(`Error: ${error.message}`);
+    // Log the full error details for server-side debugging
+    logger.error(`Full error details: ${error.toString()}`);
+
+    // Log the stack trace
+    if (error.stack) {
+      logger.error(`Error stack trace: ${error.stack}`);
+    }
+
+    // Log the request body for context
+    logger.error(`Request body: ${JSON.stringify(req.body)}`);
 
     if (error instanceof HttpException) {
       return res.status(error.status).json({
@@ -49,12 +58,21 @@ export const errorMiddleware = (
       }
     }
 
+    // For unhandled errors, return a 500 with some context
     return res.status(500).json({
       status: 500,
       message: 'Something went wrong',
+      errorName: error.name,
+      errorMessage: error.message
     });
   } catch (err) {
-    next(err);
+    // Fallback error handler
+    logger.error(`Error in error handling middleware: ${err}`);
+
+    return res.status(500).json({
+      status: 500,
+      message: 'An unexpected error occurred'
+    });
   }
 };
 
