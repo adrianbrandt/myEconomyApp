@@ -35,6 +35,7 @@ class TransactionService {
 
       let where: any = {};
 
+      // Basic filters
       if (query.categoryCode) {
         where.categoryCode = query.categoryCode;
       }
@@ -62,6 +63,21 @@ class TransactionService {
         if (query.bookingDateTo) {
           where.bookingDate.lte = new Date(query.bookingDateTo);
         }
+      }
+
+      // Fuzzy search implementation
+      if (query.search && query.search.trim() !== '') {
+        const searchTerm = query.search.trim();
+
+        // Add fuzzy search conditions
+        where.OR = [
+          { title: { contains: searchTerm, mode: 'insensitive' } },
+          { debtorAccount: { contains: searchTerm, mode: 'insensitive' } },
+          { creditorAccount: { contains: searchTerm, mode: 'insensitive' } },
+          { categoryCode: { contains: searchTerm, mode: 'insensitive' } },
+          { remittanceInformation: { contains: searchTerm, mode: 'insensitive' } },
+          { paymentMethod: { contains: searchTerm, mode: 'insensitive' } }
+        ];
       }
 
       const [transactions, count] = await Promise.all([

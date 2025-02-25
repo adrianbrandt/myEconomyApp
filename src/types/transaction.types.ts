@@ -35,4 +35,5 @@ export interface TransactionQueryParams {
   bookingDateTo?: string;
   paymentMethod?: string;
   paymentStatus?: string;
+  search?: string; // Add this for fuzzy search
 }

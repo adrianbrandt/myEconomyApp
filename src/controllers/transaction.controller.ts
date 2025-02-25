@@ -34,6 +34,7 @@ class TransactionController {
         bookingDateTo: req.query.bookingDateTo as string | undefined,
         paymentMethod: req.query.paymentMethod as string | undefined,
         paymentStatus: req.query.paymentStatus as string | undefined,
+        search: req.query.search as string | undefined, // Add this line
       };
 
       const transactions = await transactionService.findAll(query);
