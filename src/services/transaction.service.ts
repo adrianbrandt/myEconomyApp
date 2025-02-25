@@ -12,10 +12,13 @@ class TransactionService {
 
   async create(data: TransactionDTO) {
     try {
+      const { categoryCode, ...otherData } = data;
+
       return await this.prisma.transaction.create({
         data: {
-          ...data,
-          id: uuidv4() // Generate a UUIDv4 for the transaction
+          ...otherData,
+          categoryCode, // Make sure this matches your schema
+          id: uuidv4()
         },
       });
     } catch (error) {
@@ -23,13 +26,43 @@ class TransactionService {
     }
   }
 
+  // In the findAll method of your transaction.service.ts
   async findAll(query: TransactionQueryParams) {
     try {
       const page = Number(query.page) || 1;
       const limit = Number(query.limit) || 10;
       const skip = (page - 1) * limit;
 
-      const where = query.category ? { category: query.category } : {};
+      let where: any = {};
+
+      if (query.categoryCode) {
+        where.categoryCode = query.categoryCode;
+      }
+
+      if (query.debtorAccount) {
+        where.debtorAccount = query.debtorAccount;
+      }
+
+      if (query.paymentMethod) {
+        where.paymentMethod = query.paymentMethod;
+      }
+
+      if (query.paymentStatus) {
+        where.paymentStatus = query.paymentStatus;
+      }
+
+      // Handle date range queries
+      if (query.bookingDateFrom || query.bookingDateTo) {
+        where.bookingDate = {};
+
+        if (query.bookingDateFrom) {
+          where.bookingDate.gte = new Date(query.bookingDateFrom);
+        }
+
+        if (query.bookingDateTo) {
+          where.bookingDate.lte = new Date(query.bookingDateTo);
+        }
+      }
 
       const [transactions, count] = await Promise.all([
         this.prisma.transaction.findMany({

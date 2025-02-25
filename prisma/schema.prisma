@@ -8,12 +8,20 @@ datasource db {
 }
 
 model Transaction {
-  id        String   @id
-  title     String
-  amount    Float
-  category  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                    String   @id
+  title                 String
+  amount                Float
+  currencyCode          String   @default("EUR")
+  debtorAccount         String   // The account sending payment
+  creditorAccount       String?  // The account receiving payment (optional for expenses)
+  categoryCode          String   // Category classification
+  bookingDate           DateTime @default(now()) // When transaction was recorded
+  valueDate             DateTime @default(now()) // When transaction takes effect
+  remittanceInformation String?  // Payment description/notes
+  paymentMethod         String   // e.g., "CREDIT_TRANSFER", "CARD", "DIRECT_DEBIT"
+  paymentStatus         String   @default("BOOKED") // e.g., "PENDING", "BOOKED", "REJECTED"
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@map("transactions")
 }

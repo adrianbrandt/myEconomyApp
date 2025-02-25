@@ -1,7 +1,16 @@
+// src/types/transaction.types.ts
 export interface TransactionDTO {
   title: string;
   amount: number;
-  category: string;
+  currencyCode?: string;
+  debtorAccount: string;
+  creditorAccount?: string;
+  categoryCode: string;
+  bookingDate?: Date;
+  valueDate?: Date;
+  remittanceInformation?: string;
+  paymentMethod: string;
+  paymentStatus?: string;
 }
 
 export interface TransactionResponse extends TransactionDTO {
@@ -20,5 +29,10 @@ export interface PaginatedTransactionsResponse {
 export interface TransactionQueryParams {
   page?: number;
   limit?: number;
-  category?: string;
+  categoryCode?: string;
+  debtorAccount?: string;
+  bookingDateFrom?: string;
+  bookingDateTo?: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
 }

@@ -22,12 +22,18 @@ class TransactionController {
     }
   }
 
+  // In the getAllTransactions method of your transaction.controller.ts
   async getAllTransactions(req: Request, res: Response, next: NextFunction) {
     try {
       const query: TransactionQueryParams = {
         page: req.query.page ? Number(req.query.page) : undefined,
         limit: req.query.limit ? Number(req.query.limit) : undefined,
-        category: req.query.category as string | undefined,
+        categoryCode: req.query.categoryCode as string | undefined,
+        debtorAccount: req.query.debtorAccount as string | undefined,
+        bookingDateFrom: req.query.bookingDateFrom as string | undefined,
+        bookingDateTo: req.query.bookingDateTo as string | undefined,
+        paymentMethod: req.query.paymentMethod as string | undefined,
+        paymentStatus: req.query.paymentStatus as string | undefined,
       };
 
       const transactions = await transactionService.findAll(query);
